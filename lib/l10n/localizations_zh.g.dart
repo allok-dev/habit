@@ -1,5 +1,5 @@
+// ignore: unused_import
 import 'package:intl/intl.dart' as intl;
-
 import 'localizations.g.dart';
 
 // ignore_for_file: type=lint
@@ -286,6 +286,11 @@ class L10nZh extends L10n {
   @override
   String habitDisplay_deleteHabitsSuccSnackbarText(int count) {
     return '已删除$count个习惯';
+  }
+
+  @override
+  String habitDisplay_deleteHabitSuccSnackbarText(String habitName) {
+    return '已删除 $habitName';
   }
 
   @override
@@ -1814,6 +1819,11 @@ class L10nZhHant extends L10nZh {
   @override
   String habitDisplay_deleteHabitsSuccSnackbarText(int count) {
     return '已刪除 $count 個習慣';
+  }
+
+  @override
+  String habitDisplay_deleteHabitSuccSnackbarText(String habitName) {
+    return '已删除 $habitName';
   }
 
   @override

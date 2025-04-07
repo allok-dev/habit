@@ -704,7 +704,16 @@ class _HabitsDisplayView extends State<HabitsDisplayView>
           if (!mounted) break;
           final snackBar = BuildWidgetHelper().buildSnackBarWithUndo(
             context,
-            content: Text('Archived habit ${result.habitName ?? ""}'),
+            content: L10nBuilder(
+              builder: (context, l10n) {
+                final habitName = result.habitName ?? "";
+                return l10n != null
+                    ? Text(l10n
+                        .habitDisplay_deleteHabitSuccSnackbarText(habitName))
+                    : Text(
+                        'Deleted habit${habitName.isNotEmpty ? ": $habitName" : ""}');
+              },
+            ),
             onPressed: () => _revertHabitsStatus(result.recordList ?? []),
           );
           ScaffoldMessenger.of(context)

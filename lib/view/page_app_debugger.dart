@@ -16,7 +16,7 @@ import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:open_file_plus/open_file_plus.dart';
+import 'package:file_selector/file_selector.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
 
@@ -39,9 +39,7 @@ const _kCardPadding = EdgeInsets.only(top: 4.0, bottom: 2.0);
 
 Future<void> naviToAppDebuggerPage({required BuildContext context}) async {
   return Navigator.of(context).push<void>(
-    MaterialPageRoute(
-      builder: (context) => const PageAppDebugger(),
-    ),
+    MaterialPageRoute(builder: (context) => const PageAppDebugger()),
   );
 }
 
@@ -76,9 +74,9 @@ class AppDebuggerViewState extends State<AppDebuggerView> with XShare {
     if (!mounted) return;
     await context.read<AppDebuggerViewModel>().setCollectLogsSatus(newStatus);
     if (!mounted) return;
-    context
-        .read<AppDebuggerViewModel>()
-        .processDebuggingNotification(L10n.of(context));
+    context.read<AppDebuggerViewModel>().processDebuggingNotification(
+          L10n.of(context),
+        );
   }
 
   void _onDownloadLogButtonPressed(BuildContext context) async {
@@ -87,8 +85,12 @@ class AppDebuggerViewState extends State<AppDebuggerView> with XShare {
     if (!context.mounted) return;
     if (!fileExist) return _showDebugLogFileDismissSnackbar();
     final subject = L10n.of(context)?.debug_downladDebugLogs_subject;
-    trySaveFiles([XFile(filePath)], defaultTargetPlatform,
-        context: context, subject: subject);
+    trySaveFiles(
+      [XFile(filePath)],
+      defaultTargetPlatform,
+      context: context,
+      subject: subject,
+    );
   }
 
   void _onClearLogButtongPressed(BuildContext context) async {
@@ -100,12 +102,14 @@ class AppDebuggerViewState extends State<AppDebuggerView> with XShare {
     await fileObj.delete();
     AppLoggerMananger.reloadDebuggingLogger(filePath: filePath);
     if (!context.mounted) return;
-    final snackbar = BuildWidgetHelper().buildSnackBarWithDismiss(context,
-        content: L10nBuilder(
-          builder: (context, l10n) => l10n != null
-              ? Text(l10n.dbeug_clearDebugLogs_complete_snackbar)
-              : const Text("Debug log cleared"),
-        ));
+    final snackbar = BuildWidgetHelper().buildSnackBarWithDismiss(
+      context,
+      content: L10nBuilder(
+        builder: (context, l10n) => l10n != null
+            ? Text(l10n.dbeug_clearDebugLogs_complete_snackbar)
+            : const Text("Debug log cleared"),
+      ),
+    );
     ScaffoldMessenger.of(context).showSnackBar(snackbar);
   }
 
@@ -114,7 +118,12 @@ class AppDebuggerViewState extends State<AppDebuggerView> with XShare {
     final debugInfo = await AppInfo().generateAppDebugInfo();
     await File(filePath).writeAsString(debugInfo, mode: FileMode.writeOnly);
     if (!mounted) return;
-    OpenFile.open(filePath, type: "text/plain", uti: "public.plain-text");
+    if (defaultTargetPlatform == TargetPlatform.windows) {
+      await Process.start('explorer.exe', [filePath]);
+    } else {
+      final file = XFile(filePath);
+      await Share.shareXFiles([file]);
+    }
   }
 
   void _onSaveDebugButtonPressed(BuildContext context) async {
@@ -129,20 +138,27 @@ class AppDebuggerViewState extends State<AppDebuggerView> with XShare {
   void _onFABPressed(BuildContext context) async {
     final zipFilePath = await generateZippedDebugInfo();
     if (!context.mounted) return;
-    final subject =
-        L10n.of(context)?.debug_downladDebugZip_subject(debuggerZipFile);
-    trySaveFiles([XFile(zipFilePath)], defaultTargetPlatform,
-        context: context, subject: subject);
+    final subject = L10n.of(
+      context,
+    )?.debug_downladDebugZip_subject(debuggerZipFile);
+    trySaveFiles(
+      [XFile(zipFilePath)],
+      defaultTargetPlatform,
+      context: context,
+      subject: subject,
+    );
   }
 
   void _showDebugLogFileDismissSnackbar() {
     if (!mounted) return;
-    final snackbar = BuildWidgetHelper().buildSnackBarWithDismiss(context,
-        content: L10nBuilder(
-          builder: (context, l10n) => l10n != null
-              ? Text(l10n.debug_missingDebugLogFile_snackbar)
-              : const Text("Log file missing"),
-        ));
+    final snackbar = BuildWidgetHelper().buildSnackBarWithDismiss(
+      context,
+      content: L10nBuilder(
+        builder: (context, l10n) => l10n != null
+            ? Text(l10n.debug_missingDebugLogFile_snackbar)
+            : const Text("Log file missing"),
+      ),
+    );
     ScaffoldMessenger.of(context).showSnackBar(snackbar);
   }
 
@@ -153,12 +169,14 @@ class AppDebuggerViewState extends State<AppDebuggerView> with XShare {
         leading: const PageBackButton(),
         automaticallyImplyLeading: false,
       ),
-      floatingActionButton: Builder(builder: (context) {
-        return FloatingActionButton(
-          child: const Icon(Icons.share),
-          onPressed: () => _onFABPressed(context),
-        );
-      }),
+      floatingActionButton: Builder(
+        builder: (context) {
+          return FloatingActionButton(
+            child: const Icon(Icons.share),
+            onPressed: () => _onFABPressed(context),
+          );
+        },
+      ),
       body: ListView(
         children: [
           Selector<AppDebuggerViewModel, bool>(
@@ -210,14 +228,7 @@ class _Sperator extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return const Row(
-      children: [
-        Spacer(),
-        Flexible(
-          flex: 10,
-          child: Divider(),
-        ),
-        Spacer(),
-      ],
+      children: [Spacer(), Flexible(flex: 10, child: Divider()), Spacer()],
     );
   }
 }
@@ -252,32 +263,39 @@ class _DebuggerLogCard extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.end,
               children: <Widget>[
-                Builder(builder: (context) {
-                  return TextButton(
-                    onPressed: onDownloadPressed != null
-                        ? () => onDownloadPressed!(context)
-                        : null,
-                    child: Text(
-                      l10n?.debug_debuggerLogCard_saveButton_text ?? 'Downlaod',
-                      style: TextStyle(
+                Builder(
+                  builder: (context) {
+                    return TextButton(
+                      onPressed: onDownloadPressed != null
+                          ? () => onDownloadPressed!(context)
+                          : null,
+                      child: Text(
+                        l10n?.debug_debuggerLogCard_saveButton_text ??
+                            'Downlaod',
+                        style: TextStyle(
                           color:
-                              Theme.of(context).colorScheme.onPrimaryContainer),
-                    ),
-                  );
-                }),
+                              Theme.of(context).colorScheme.onPrimaryContainer,
+                        ),
+                      ),
+                    );
+                  },
+                ),
                 const SizedBox(width: 8),
-                Builder(builder: (context) {
-                  return TextButton(
-                    onPressed: onClearPressed != null
-                        ? () => onClearPressed!(context)
-                        : null,
-                    child: Text(
-                      l10n?.debug_debuggerLogCard_clearButton_text ?? 'Clear',
-                      style:
-                          TextStyle(color: Theme.of(context).colorScheme.error),
-                    ),
-                  );
-                }),
+                Builder(
+                  builder: (context) {
+                    return TextButton(
+                      onPressed: onClearPressed != null
+                          ? () => onClearPressed!(context)
+                          : null,
+                      child: Text(
+                        l10n?.debug_debuggerLogCard_clearButton_text ?? 'Clear',
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.error,
+                        ),
+                      ),
+                    );
+                  },
+                ),
                 const SizedBox(width: 8),
               ],
             ),

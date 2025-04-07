@@ -1,5 +1,5 @@
+// ignore: unused_import
 import 'package:intl/intl.dart' as intl;
-
 import 'localizations.g.dart';
 
 // ignore_for_file: type=lint
@@ -286,6 +286,11 @@ class L10nTr extends L10n {
   @override
   String habitDisplay_deleteHabitsSuccSnackbarText(int count) {
     return '$count alışkanlık silindi';
+  }
+
+  @override
+  String habitDisplay_deleteHabitSuccSnackbarText(String habitName) {
+    return 'Deleted $habitName';
   }
 
   @override

@@ -266,6 +266,15 @@
       }
     }
   },
+  "habitDisplay_deleteHabitSuccSnackbarText": "已删除 {habitName}",
+  "@habitDisplay_deleteHabitSuccSnackbarText": {
+    "placeholders": {
+      "count": {
+        "type": "String",
+        "example": "Learn"
+      }
+    }
+  },
   "habitDisplay_editPopMenu_selectAll": "全選",
   "@habitDisplay_editPopMenu_selectAll": {},
   "habitDisplay_editPopMenu_export": "匯出",
